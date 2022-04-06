@@ -1,15 +1,45 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 namespace RockPaperScissors
 {
     class Program
     {
+        struct Score
+        {
+            public Score(string name, int score)
+            {
+                this.name = name;
+                this.score = score;
+            }
+            public string name;
+            public int score;
+        }
         static void Main(string[] args)
         {
+            // Read scoreboard into list ////
+            List<Score> scores = new List<Score>();
+            string[] scoreList = File.ReadAllLines("scoreboard.txt");
+            foreach (string score in scoreList)
+            {
+                scores.Add(new Score(score.Split("|")[0], int.Parse(score.Split("|")[1])));
+            }
+            Console.WriteLine("Current Score Table:");
+            foreach(Score score in scores)
+            {
+                Console.WriteLine(score.name + " - " + score.score);
+            }
+            Console.ReadLine();
+            /////////////////////////////////
+            Console.Clear();
+            Console.Write("Please enter your name: ");
+            string playerName = Console.ReadLine().Replace("|", ""); // SANITISE!
             int pScore = 0, cScore = 0;
-            while (true)
+            Console.WriteLine("Press any key to start (type \"scores\" to see scoreboard and exit)");
+            while (Console.ReadLine() != "scores")
             {
                 Console.Clear();
-                Console.WriteLine("PLAYER   {0}|{1}     CPU", pScore, cScore);
+                Console.WriteLine("{2}   {0}|{1}     CPU", pScore, cScore, playerName);
                 Console.WriteLine("Please enter Rock, Paper or Scissors:");
                 string pChoiceStr = Console.ReadLine().ToLower();
                 int pChoice = pChoiceStr == "rock" ? 1 : (pChoiceStr == "paper" ? 2 : 3);
@@ -27,10 +57,34 @@ namespace RockPaperScissors
                     Console.WriteLine((result ? "You" : "Computer") + " won!");
                     pScore += result ? 1 : 0;
                     cScore += !result ? 1 : 0;
-                    Console.ReadLine();
+                    AddScore(result ? playerName : "CPU", scores);
                 }
             }
+            RefreshList(scores, "scoreboard.txt");
+        }
+
+        static void AddScore(string name, List<Score> scores)
+        {
+            for (int i = 0; i < scores.Count; i++)
+            {
+                if(scores[i].name == name)
+                {
+                    scores[i] = new Score(name, scores[i].score + 1);
+                }
+            }
+
             
+        }
+
+        static void RefreshList(List<Score> scores, string path)
+        {
+            List<Score> sortedScores = scores.OrderByDescending(myvalue => myvalue.score).ToList();
+            string[] scoresList = new string[sortedScores.Count];
+            for (int i = 0;i<sortedScores.Count;i++)
+            {
+                scoresList[i] = sortedScores[i].name + "|" + sortedScores[i].score;
+            }
+            File.WriteAllLines(path, scoresList);
         }
 
 
